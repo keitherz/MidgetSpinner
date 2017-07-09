@@ -24,7 +24,7 @@ typedef bool bool_t;
 #define BLINK_INTERVAL         (250)
 
 #define RAMP_INC               (2)
-#define RAMP_DEC               (-8)
+#define RAMP_DEC               (-32)
 #define RAMP_PERIOD            (25)
 
 SoftwareSerial9 leftWheelSerial(LEFT_WHEEL_RX, LEFT_WHEEL_TX);
@@ -61,17 +61,10 @@ typedef struct
 
 typedef struct
 {
-  int16_t currSpeed;
+  int16_t activeSpeed;
   int16_t setPointSpeed;
   int16_t rampIncrement;
 } speedVars_t;
-
-typedef struct
-{
-  int16_t left;
-  int16_t right;
-  int16_t spinner;
-} wheelSpeed_t;
 
 static ctrlSerialState_t ctrlSerialState;
 static ctrlStatus_t ctrlStatus;
@@ -83,10 +76,6 @@ static speedVars_t leftWheel;
 static speedVars_t rightWheel;
 static speedVars_t spinnerWheel;
 
-static wheelSpeed_t wheelSpeed;
-static wheelSpeed_t wheelSpeedSetpoint;
-static wheelSpeed_t wheelSpeedRampInc;
-
 static uint32_t ctrlTimeoutStamp;
 static uint32_t wheelDriverRampStamp;
 static uint32_t wheelDriverUpdateStamp;
@@ -97,7 +86,7 @@ static void wheelDriverProcess(void);
 static void blinkProcess(void);
 
 static void parseCtrlWheelSpeed(void);
-static void processWheelSpeedRamp(void);
+static void processWheelSpeedRamp(speedVars_t *wheel);
 static void updateCtrlSerialStatus(void);
 static uint8_t calcCtrlSerialChecksum(void);
 
@@ -108,15 +97,15 @@ void setup()
   leftWheelSerial.begin(26315);
   rightWheelSerial.begin(26315);
   spinnerWheelSerial.begin(26315);
-  
+
   pinMode(LED_PIN, OUTPUT);
   digitalWrite(LED_PIN, LOW);
-  
-  memset(&wheelSpeed, 0, sizeof(wheelSpeed));
-  memset(&wheelSpeedSetpoint, 0, sizeof(wheelSpeedSetpoint));
-  memset(&wheelSpeedRampInc, 0, sizeof(wheelSpeedRampInc));
+
+  memset(&leftWheel, 0, sizeof(leftWheel));
+  memset(&rightWheel, 0, sizeof(rightWheel));
+  memset(&spinnerWheel, 0, sizeof(spinnerWheel));
   memset(&ctrlStatus, 0, sizeof(ctrlStatus));
-  
+
   wheelDriverUpdateStamp = millis();
   blinkStamp = millis();
 }
@@ -144,7 +133,7 @@ void ctrlSerialEvent()
         }
         break;
       }
-      
+
       case CTRL_SER_SYNC2:
       {
         if(0xA5 == rxChar)
@@ -157,7 +146,7 @@ void ctrlSerialEvent()
         }
         break;
       }
-      
+
       case CTRL_SER_FETCHDATA:
       {
         ctrlSerialBuf[ctrlSerialCounter++] = rxChar;
@@ -176,7 +165,7 @@ void ctrlSerialEvent()
         }
         break;
       }
-      
+
       default:
       {
         ctrlSerialState = CTRL_SER_SYNC1;
@@ -186,7 +175,7 @@ void ctrlSerialEvent()
   }
 }
 
-void controllerProcess(void)
+static void controllerProcess(void)
 {
   if(true == ctrlSerialAvailable)
   {
@@ -200,40 +189,43 @@ void controllerProcess(void)
   {
     if((millis() - ctrlTimeoutStamp) >= CTRL_TIMEOUT)
     {
-      /* commence shutdown here */
+      leftWheel.setPointSpeed = 0;
+      rightWheel.setPointSpeed = 0;
     }
   }
 }
 
-void wheelDriverProcess(void)
+static void wheelDriverProcess(void)
 {
   int16_t speedVal;
-  
+
   if((millis() - wheelDriverRampStamp) >= RAMP_PERIOD)
   {
     wheelDriverRampStamp = millis();
 
-    processWheelSpeedRamp();
+    processWheelSpeedRamp(&leftWheel);
+    processWheelSpeedRamp(&rightWheel);
+    processWheelSpeedRamp(&spinnerWheel);
 #if 1
-    DEBUG_SERIAL.print(wheelSpeedSetpoint.left, DEC);
+    DEBUG_SERIAL.print(leftWheel.setPointSpeed, DEC);
     DEBUG_SERIAL.print(", ");
-    DEBUG_SERIAL.print(wheelSpeedSetpoint.right, DEC);
+    DEBUG_SERIAL.print(rightWheel.setPointSpeed, DEC);
     DEBUG_SERIAL.print(", ");
-    DEBUG_SERIAL.print(wheelSpeed.left, DEC);
+    DEBUG_SERIAL.print(leftWheel.activeSpeed, DEC);
     DEBUG_SERIAL.print(", ");
-    DEBUG_SERIAL.print(wheelSpeed.right, DEC);
+    DEBUG_SERIAL.print(rightWheel.activeSpeed, DEC);
     DEBUG_SERIAL.println();
 #endif
   }
-  
+
   if((millis() - wheelDriverUpdateStamp) >= WHEEL_DRIVER_INTERVAL)
   {
     wheelDriverUpdateStamp = millis();
-    
+
 #ifdef INVERT_LEFT_WHEEL
-    speedVal = -wheelSpeed.left;
+    speedVal = -leftWheel.activeSpeed;
 #else
-    speedVal = wheelSpeed.left;
+    speedVal = leftWheel.activeSpeed;
 #endif
     leftWheelSerial.write9(0x100);
     leftWheelSerial.write9(speedVal & 0x00FF);
@@ -241,11 +233,11 @@ void wheelDriverProcess(void)
     leftWheelSerial.write9(speedVal & 0x00FF);
     leftWheelSerial.write9((speedVal >> 8) & 0x00FF);
     leftWheelSerial.write9(0x055);
-    
+
 #ifdef INVERT_RIGHT_WHEEL
-    speedVal = -wheelSpeed.right;
+    speedVal = -rightWheel.activeSpeed;
 #else
-    speedVal = wheelSpeed.right;
+    speedVal = rightWheel.activeSpeed;
 #endif
     rightWheelSerial.write9(0x100);
     rightWheelSerial.write9(speedVal & 0x00FF);
@@ -253,11 +245,11 @@ void wheelDriverProcess(void)
     rightWheelSerial.write9(speedVal & 0x00FF);
     rightWheelSerial.write9((speedVal >> 8) & 0x00FF);
     rightWheelSerial.write9(0x055);
-    
+
 #ifdef INVERT_SPINNER_WHEEL
-    speedVal = -wheelSpeed.spinner;
+    speedVal = -spinnerWheel.activeSpeed;
 #else
-    speedVal = wheelSpeed.spinner;
+    speedVal = spinnerWheel.activeSpeed;
 #endif
     spinnerWheelSerial.write9(0x100);
     spinnerWheelSerial.write9(speedVal & 0x00FF);
@@ -268,7 +260,7 @@ void wheelDriverProcess(void)
   }
 }
 
-void blinkProcess(void)
+static void blinkProcess(void)
 {
   if((millis() - blinkStamp) >= BLINK_INTERVAL)
   {
@@ -277,130 +269,108 @@ void blinkProcess(void)
   }
 }
 
-void parseCtrlWheelSpeed(void)
+static void parseCtrlWheelSpeed(void)
 {
-  int16_t xVal;
-  int16_t yVal;
+  int16_t tempBuf;
 
   if((ctrlStatus.lefty <= 120) || (ctrlStatus.lefty >= 136))
   {
-    yVal = map(ctrlStatus.lefty, 255, 0, -2048, 2048);
-    //DEBUG_SERIAL.println(yVal, DEC);
+    tempBuf = map(ctrlStatus.lefty, 255, 0, -2048, 2048);
+    leftWheel.setPointSpeed = tempBuf;
+    rightWheel.setPointSpeed = tempBuf;
   }
   else
   {
-    yVal = 0;
+    if(ctrlStatus.leftx <= 120)
+    {
+        tempBuf = map(ctrlStatus.leftx, 0, 128, -2048, 2048);
+        leftWheel.setPointSpeed = -tempBuf;
+        rightWheel.setPointSpeed = tempBuf;
+    }
+    else if(ctrlStatus.leftx >= 136)
+    {
+        tempBuf = map(ctrlStatus.leftx, 128, 255, -2048, 2048);
+        leftWheel.setPointSpeed = tempBuf;
+        rightWheel.setPointSpeed = tempBuf;
+    }
+    else
+    {
+        leftWheel.setPointSpeed = 0;
+        rightWheel.setPointSpeed = 0;
+    }
+
+    if(ctrlStatus.righty <= 112)
+    {
+        tempBuf = map(ctrlStatus.righty, 128, 0, -2048, 2048);
+        spinnerWheel.setPointSpeed = tempBuf;
+    }
+    else
+    {
+        spinnerWheel.setPointSpeed = 0;
+    }
   }
 
-  wheelSpeedSetpoint.left = yVal;
-  wheelSpeedSetpoint.right = yVal;
-
+#if 1
   DEBUG_SERIAL.print(ctrlStatus.leftx, DEC);
   DEBUG_SERIAL.print(", ");
   DEBUG_SERIAL.print(ctrlStatus.lefty, DEC);
   DEBUG_SERIAL.println();
+#endif
 }
 
-void processWheelSpeedRamp(void)
+static void processWheelSpeedRamp(speedVars_t *wheel)
 {
-  int16_t tempBuf;
+    int16_t tempBuf;
 
-  if(wheelSpeedSetpoint.left > wheelSpeed.left)
-  {
-    if(wheelSpeedRampInc.left < 0)
+    if(wheel->setPointSpeed > wheel->activeSpeed)
     {
-      wheelSpeedRampInc.left = RAMP_INC;
-    }
-    else
-    {
-      wheelSpeedRampInc.left += RAMP_INC;
-    }
+        if(wheel->rampIncrement < 0)
+        {
+            wheel->rampIncrement = RAMP_INC;
+        }
+        else
+        {
+            wheel->rampIncrement += RAMP_INC;
+        }
 
-    tempBuf = wheelSpeed.left + wheelSpeedRampInc.left;
-    if(tempBuf > wheelSpeedSetpoint.left)
-    {
-      wheelSpeed.left = wheelSpeedSetpoint.left;
+        tempBuf = wheel->activeSpeed + wheel->rampIncrement;
+        if(tempBuf > wheel->setPointSpeed)
+        {
+            wheel->activeSpeed = wheel->setPointSpeed;
+        }
+        else
+        {
+            wheel->activeSpeed = tempBuf;
+        }
     }
-    else
+    else if(wheel->setPointSpeed < wheel->activeSpeed)
     {
-      wheelSpeed.left = tempBuf;
-    }
-  }
-  else if(wheelSpeedSetpoint.left < wheelSpeed.left)
-  {
-    if(wheelSpeedRampInc.left > 0)
-    {
-      wheelSpeedRampInc.left = RAMP_DEC;
-    }
-    else
-    {
-      wheelSpeedRampInc.left += RAMP_DEC;
-    }
+        if(wheel->rampIncrement > 0)
+        {
+            wheel->rampIncrement = RAMP_DEC;
+        }
+        else
+        {
+            wheel->rampIncrement += RAMP_DEC;
+        }
 
-    tempBuf = wheelSpeed.left + wheelSpeedRampInc.left;
-    if(tempBuf < wheelSpeedSetpoint.left)
-    {
-      wheelSpeed.left = wheelSpeedSetpoint.left;
+        tempBuf = wheel->activeSpeed + wheel->rampIncrement;
+        if(tempBuf < wheel->setPointSpeed)
+        {
+            wheel->activeSpeed = wheel->setPointSpeed;
+        }
+        else
+        {
+            wheel->activeSpeed = tempBuf;
+        }
     }
     else
     {
-      wheelSpeed.left = tempBuf;
+        wheel->rampIncrement = 0;
     }
-  }
-  else
-  {
-    wheelSpeedRampInc.left = 0;
-  }
-
-  if(wheelSpeedSetpoint.right > wheelSpeed.right)
-  {
-    if(wheelSpeedRampInc.right < 0)
-    {
-      wheelSpeedRampInc.right = RAMP_INC;
-    }
-    else
-    {
-      wheelSpeedRampInc.right += RAMP_INC;
-    }
-
-    tempBuf = wheelSpeed.right + wheelSpeedRampInc.right;
-    if(tempBuf > wheelSpeedSetpoint.right)
-    {
-      wheelSpeed.right = wheelSpeedSetpoint.right;
-    }
-    else
-    {
-      wheelSpeed.right = tempBuf;
-    }
-  }
-  else if(wheelSpeedSetpoint.right < wheelSpeed.right)
-  {
-    if(wheelSpeedRampInc.right > 0)
-    {
-      wheelSpeedRampInc.right = RAMP_DEC;
-    }
-    else
-    {
-      wheelSpeedRampInc.right += RAMP_DEC;
-    }
-
-    tempBuf = wheelSpeed.right + wheelSpeedRampInc.right;
-    if(tempBuf < wheelSpeedSetpoint.right)
-    {
-      wheelSpeed.right = wheelSpeedSetpoint.right;
-    }
-    else
-    {
-      wheelSpeed.right = tempBuf;
-    }
-  }
-  else
-  {
-    wheelSpeedRampInc.right = 0;
-  }
 }
 
-void updateCtrlSerialStatus(void)
+static void updateCtrlSerialStatus(void)
 {
   memset(&ctrlStatus, 0, sizeof(ctrlStatus));
   if(0 == (ctrlSerialBuf[3] & 0x08))
@@ -419,7 +389,7 @@ void updateCtrlSerialStatus(void)
   {
     ctrlStatus.right = true;
   }
-  
+
   if(0 == (ctrlSerialBuf[4] & 0x08))
   {
     ctrlStatus.triangle = true;
@@ -436,7 +406,7 @@ void updateCtrlSerialStatus(void)
   {
     ctrlStatus.square = true;
   }
-  
+
   if(0 == (ctrlSerialBuf[4] & 0x20))
   {
     ctrlStatus.left1 = true;
@@ -457,24 +427,24 @@ void updateCtrlSerialStatus(void)
   {
     ctrlStatus.start = true;
   }
-  
+
   ctrlStatus.rightx = ctrlSerialBuf[5];
-  ctrlStatus.rightx = ctrlSerialBuf[6];
+  ctrlStatus.righty = ctrlSerialBuf[6];
   ctrlStatus.leftx = ctrlSerialBuf[7];
   ctrlStatus.lefty = ctrlSerialBuf[8];
 }
 
-uint8_t calcCtrlSerialChecksum(void)
+static uint8_t calcCtrlSerialChecksum(void)
 {
   uint8_t idx;
   uint8_t sum;
-  
+
   sum = (0x5A + 0xA5);
   for(idx = 0; idx < 9; idx++)
   {
     sum += ctrlSerialBuf[idx];
   }
-  
+
   return sum;
 }
 

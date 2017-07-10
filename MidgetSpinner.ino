@@ -19,13 +19,13 @@ typedef bool bool_t;
 //#define INVERT_RIGHT_WHEEL
 //#define INVERT_SPINNER_WHEEL
 
-#define CTRL_TIMEOUT           (1000)
+#define CTRL_TIMEOUT           (500)
 #define WHEEL_DRIVER_INTERVAL  (5)
 #define BLINK_INTERVAL         (250)
 
 #define RAMP_INC               (2)
-#define RAMP_DEC               (-32)
-#define RAMP_PERIOD            (25)
+#define RAMP_DEC               (-16)
+#define RAMP_PERIOD            (50)
 
 SoftwareSerial9 leftWheelSerial(LEFT_WHEEL_RX, LEFT_WHEEL_TX);
 SoftwareSerial9 rightWheelSerial(RIGHT_WHEEL_RX, RIGHT_WHEEL_TX);
@@ -191,6 +191,7 @@ static void controllerProcess(void)
     {
       leftWheel.setPointSpeed = 0;
       rightWheel.setPointSpeed = 0;
+      spinnerWheel.setPointSpeed = 0;
     }
   }
 }
@@ -206,14 +207,18 @@ static void wheelDriverProcess(void)
     processWheelSpeedRamp(&leftWheel);
     processWheelSpeedRamp(&rightWheel);
     processWheelSpeedRamp(&spinnerWheel);
-#if 1
+#if 0
     DEBUG_SERIAL.print(leftWheel.setPointSpeed, DEC);
     DEBUG_SERIAL.print(", ");
     DEBUG_SERIAL.print(rightWheel.setPointSpeed, DEC);
     DEBUG_SERIAL.print(", ");
+    DEBUG_SERIAL.print(spinnerWheel.setPointSpeed, DEC);
+    DEBUG_SERIAL.print(", ");
     DEBUG_SERIAL.print(leftWheel.activeSpeed, DEC);
     DEBUG_SERIAL.print(", ");
     DEBUG_SERIAL.print(rightWheel.activeSpeed, DEC);
+    DEBUG_SERIAL.print(", ");
+    DEBUG_SERIAL.print(spinnerWheel.activeSpeed, DEC);
     DEBUG_SERIAL.println();
 #endif
   }
@@ -291,7 +296,7 @@ static void parseCtrlWheelSpeed(void)
     {
         tempBuf = map(ctrlStatus.leftx, 128, 255, -2048, 2048);
         leftWheel.setPointSpeed = tempBuf;
-        rightWheel.setPointSpeed = tempBuf;
+        rightWheel.setPointSpeed = -tempBuf;
     }
     else
     {
@@ -309,13 +314,6 @@ static void parseCtrlWheelSpeed(void)
         spinnerWheel.setPointSpeed = 0;
     }
   }
-
-#if 1
-  DEBUG_SERIAL.print(ctrlStatus.leftx, DEC);
-  DEBUG_SERIAL.print(", ");
-  DEBUG_SERIAL.print(ctrlStatus.lefty, DEC);
-  DEBUG_SERIAL.println();
-#endif
 }
 
 static void processWheelSpeedRamp(speedVars_t *wheel)

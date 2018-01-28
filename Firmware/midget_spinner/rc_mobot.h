@@ -2,8 +2,6 @@
 #define RC_MOBOT
 
 void initMobot(void);
-void mobotCycle(unsigned char ui8_mobot_forward_speed, unsigned char ui8_mobot_turn_speed);   // ch2, ch1
-void stopMotors(void);
-void setLeftMotorSpeed(char si8_speed);
-void setRightMotorSpeed(char si8_speed);
+void mobotCycle(unsigned int ui16_mobot_forward_speed, unsigned int ui16_mobot_turn_speed);   // ch2, ch1
+
 #endif

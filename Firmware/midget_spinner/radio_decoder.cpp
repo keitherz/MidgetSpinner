@@ -1,4 +1,5 @@
 #include <arduino.h>
+
 #include "midget_spinner_cfg.h"
 
 #include "radio_decoder.h"

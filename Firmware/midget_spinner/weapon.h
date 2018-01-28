@@ -11,7 +11,6 @@ typedef enum
 
 
 void initWeapon(void);
-void stopWeapon(void);
-void setWeaponSpeed(char si8_speed);
 void weaponCycle(unsigned int ui16_weapon_speed, unsigned int ui16_weapon_arm, unsigned int ui16_weapon_prearm);  // ch3, ch4, ch5
+
 #endif

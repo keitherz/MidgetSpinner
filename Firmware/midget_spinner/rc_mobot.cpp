@@ -11,3 +11,17 @@ void mobotCycle(unsigned char ui8_mobot_forward_speed, unsigned char ui8_mobot_t
   
 }
 
+void stopMotors(void)
+{
+  
+}
+
+void setLeftMotorSpeed(char si8_speed)
+{
+  
+}
+
+void setRightMotorSpeed(char si8_speed)
+{
+  
+}

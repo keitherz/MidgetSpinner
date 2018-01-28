@@ -12,9 +12,13 @@ static weapon_states_et   e_weapon_state;
 static bool b_prearm_switch_active                      = false;
 static bool b_arm_switch_active                         = false;
 
-static unsigned char      ui8_weapon_speed_buff;
-static unsigned char      ui8_weapon_arm_buff;
-static unsigned char      ui8_weapon_prearm_buff;
+static unsigned int       ui16_weapon_speed_buff;
+static unsigned int       ui16_weapon_arm_buff;
+static unsigned int       ui16_weapon_prearm_buff;
+static unsigned long      ui32_prearm_activation_validation;
+static unsigned long      ui32_prearm_deactivation_validation;
+static unsigned long      ui32_arm_activation_validation;
+static unsigned long      ui32_arm_deactivation_validation;
 
 static void updatePreArmSwitchStatus(void);
 static void updateArmSwitchStatus(void);
@@ -23,14 +27,14 @@ void initWeapon(void)
 {
   /* disable weapon motors */
   e_weapon_state = DISARMED;
-  disableWeapon();
+  stopWeapon();
 }
 
-void weaponCycle(unsigned char ui8_weapon_speed, unsigned char ui8_weapon_arm, unsigned char ui8_weapon_prearm)
+void weaponCycle(unsigned int ui16_weapon_speed, unsigned int ui16_weapon_arm, unsigned int ui16_weapon_prearm)
 {
-  ui8_weapon_speed_buff   = ui8_weapon_speed;
-  ui8_weapon_arm_buff     = ui8_weapon_arm;
-  ui8_weapon_prearm_buff  = ui8_weapon_prearm;
+  ui16_weapon_speed_buff   = ui16_weapon_speed;
+  ui16_weapon_arm_buff     = ui16_weapon_arm;
+  ui16_weapon_prearm_buff  = ui16_weapon_prearm;
 
   updateArmSwitchStatus();
   
@@ -47,7 +51,7 @@ void weaponCycle(unsigned char ui8_weapon_speed, unsigned char ui8_weapon_arm, u
       else
       {
         /* disarmed state */
-        disableWeapon();
+        stopWeapon();
       }
       break;
     }
@@ -56,19 +60,19 @@ void weaponCycle(unsigned char ui8_weapon_speed, unsigned char ui8_weapon_arm, u
       if(false == b_prearm_switch_active)
       {
         /* disarmed state */
-        disableWeapon();
+        stopWeapon();
         e_weapon_state = DISARMED;
       }
       else if(true == b_arm_switch_active)
       {
         /* armed state */
-        disableWeapon();
+        stopWeapon();
         e_weapon_state = ARMED;        
       }
       else
       {
         /* prearmed state */
-        disableWeapon();
+        stopWeapon();
         updateArmSwitchStatus();
       }
       break;
@@ -78,13 +82,13 @@ void weaponCycle(unsigned char ui8_weapon_speed, unsigned char ui8_weapon_arm, u
       if(false == b_prearm_switch_active)
       {
         /* disarmed state */
-        disableWeapon();
+        stopWeapon();
         e_weapon_state = DISARMED;
       }
       else if(false == b_arm_switch_active)
       {
         /* prearmed state */
-        disableWeapon();
+        stopWeapon();
         e_weapon_state = PREARMED;        
       }
       else
@@ -102,32 +106,73 @@ void weaponCycle(unsigned char ui8_weapon_speed, unsigned char ui8_weapon_arm, u
   }
 }
 
-void disableWeapon(void)
+void stopWeapon(void)
+{
+  
+}
+
+void setWeaponSpeed(char si8_speed)
 {
   
 }
 
 static void updatePreArmSwitchStatus(void)
 {
-  if(ui8_weapon_prearm_buff > UI16_PREARM_LIMIT)
+  if(ui16_weapon_prearm_buff > UI16_PREARM_LIMIT)
   {
-    b_prearm_switch_active = true;
+    ui32_prearm_deactivation_validation = K_PREARM_VALIDATION_DELAY;
+    
+    if(0 != ui32_prearm_activation_validation)
+    {
+      ui32_prearm_activation_validation--;
+    }
+    else
+    {
+      b_prearm_switch_active = true;
+    }
   }
   else
   {
-    b_prearm_switch_active = false;
+    ui32_prearm_activation_validation = K_PREARM_VALIDATION_DELAY;
+
+    if(0 != ui32_prearm_deactivation_validation)
+    {
+      ui32_prearm_deactivation_validation--;
+    }
+    else
+    {
+      b_prearm_switch_active = false;
+    }
   }
 }
 
 static void updateArmSwitchStatus(void)
 {
-  if(ui8_weapon_arm_buff > UI16_ARM_ACTIVATE_LIMIT)
+  if(ui16_weapon_arm_buff > UI16_ARM_ACTIVATE_LIMIT)
   {
-    b_arm_switch_active = true;
+    ui32_arm_deactivation_validation = K_ARM_VALIDATION_DELAY;
+
+    if(0 != ui32_arm_activation_validation)
+    {
+      ui32_arm_activation_validation--;
+    }
+    else
+    {
+      b_arm_switch_active = true;
+    }
   }
-  else if(ui8_weapon_arm_buff < UI16_ARM_DEACTIVATE_LIMIT)
+  else if(ui16_weapon_arm_buff < UI16_ARM_DEACTIVATE_LIMIT)
   {
-    b_arm_switch_active = false;
+    ui32_arm_activation_validation = K_ARM_VALIDATION_DELAY;
+
+    if(0 != ui32_arm_deactivation_validation)
+    {
+      ui32_arm_deactivation_validation--;
+    }
+    else
+    {
+      b_arm_switch_active = false;
+    }
   }
   else
   {

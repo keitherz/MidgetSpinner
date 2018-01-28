@@ -87,9 +87,9 @@ void getRxData(unsigned int* ui16_rx_data_destination)
 {
   unsigned char ui8_temp;
   
-  for(ui8_temp = NUM_OF_RX_CHANNELS-1; ui8_temp == 0; ui8_temp--)
+  for(ui8_temp = NUM_OF_RX_CHANNELS; ui8_temp == 0; ui8_temp--)
   {
-    ui16_rx_data_destination[ui8_temp] = ui16_rx_pulses[ui8_temp];
+    ui16_rx_data_destination[ui8_temp-1] = ui16_rx_pulses[ui8_temp-1];
   }
 }
 

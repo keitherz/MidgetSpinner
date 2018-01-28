@@ -45,7 +45,7 @@ void weaponCycle(unsigned int ui16_weapon_speed, unsigned int ui16_weapon_arm, u
   ui16_weapon_arm_buff      = ui16_weapon_arm;
   ui16_weapon_prearm_buff   = ui16_weapon_prearm;
 
-  updateArmSwitchStatus();
+  updatePreArmSwitchStatus();
   
   switch(e_weapon_state)
   {
@@ -169,7 +169,7 @@ static void updateArmSwitchStatus(void)
 {
   if((ui16_weapon_arm_buff > UI16_ARM_ACTIVATE_LIMIT) && (si16_weapon_speed_buff < K_SPEED_CUT_LIMIT))
   {
-    ui32_arm_deactivation_validation = K_ARM_VALIDATION_DELAY;
+    ui32_arm_deactivation_validation  = K_ARM_VALIDATION_DELAY;
 
     if(0 != ui32_arm_activation_validation)
     {
@@ -182,7 +182,7 @@ static void updateArmSwitchStatus(void)
   }
   else if(ui16_weapon_arm_buff < UI16_ARM_DEACTIVATE_LIMIT)
   {
-    ui32_arm_activation_validation = K_ARM_VALIDATION_DELAY;
+    ui32_arm_activation_validation    = K_ARM_VALIDATION_DELAY;
 
     if(0 != ui32_arm_deactivation_validation)
     {
@@ -195,7 +195,8 @@ static void updateArmSwitchStatus(void)
   }
   else
   {
-    /* do nothing */
+    ui32_arm_deactivation_validation  = K_ARM_VALIDATION_DELAY;
+    ui32_arm_activation_validation    = K_ARM_VALIDATION_DELAY;
   }
 }
 

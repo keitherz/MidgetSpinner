@@ -7,11 +7,11 @@
 #include "weapon_cfg.h"
 
 static const unsigned int  UI16_PREARM_LIMIT            = (unsigned int)K_PREARM_LIMIT;
-static const unsigned int  UI16_PREARM_VALIDATION_DELAY = (unsigned int)K_PREARM_VALIDATION_DELAY;
+static const unsigned int  UI16_PREARM_VALIDATION_DELAY = (unsigned int)K_PREARM_VALIDATION_DELAY_VALUE;
 
 static const unsigned int  UI16_ARM_ACTIVATE_LIMIT      = (unsigned int)K_ARM_ACTIVATE_LIMIT;
 static const unsigned int  UI16_ARM_DEACTIVATE_LIMIT    = (unsigned int)K_ARM_DEACTIVATE_LIMIT;
-static const unsigned int  UI16_ARM_VALIDATION_DELAY    = (unsigned int)K_ARM_VALIDATION_DELAY;
+static const unsigned int  UI16_ARM_VALIDATION_DELAY    = (unsigned int)K_ARM_VALIDATION_DELAY_VALUE;
 
 static weapon_states_et   e_weapon_state;
 static bool b_prearm_switch_active                      = false;

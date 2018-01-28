@@ -4,41 +4,41 @@
   <element>
     <id>UMLState</id>
     <coordinates>
-      <x>890</x>
-      <y>200</y>
+      <x>1030</x>
+      <y>250</y>
       <w>100</w>
       <h>60</h>
     </coordinates>
-    <panel_attributes>disarmed</panel_attributes>
+    <panel_attributes>*disarmed*</panel_attributes>
     <additional_attributes/>
   </element>
   <element>
     <id>UMLState</id>
     <coordinates>
-      <x>1090</x>
-      <y>400</y>
+      <x>1230</x>
+      <y>450</y>
       <w>90</w>
       <h>60</h>
     </coordinates>
-    <panel_attributes>prearmed</panel_attributes>
+    <panel_attributes>*prearmed*</panel_attributes>
     <additional_attributes/>
   </element>
   <element>
     <id>UMLState</id>
     <coordinates>
-      <x>700</x>
-      <y>400</y>
+      <x>840</x>
+      <y>450</y>
       <w>90</w>
       <h>60</h>
     </coordinates>
-    <panel_attributes>armed</panel_attributes>
+    <panel_attributes>*armed*</panel_attributes>
     <additional_attributes/>
   </element>
   <element>
     <id>Relation</id>
     <coordinates>
-      <x>980</x>
-      <y>200</y>
+      <x>1120</x>
+      <y>250</y>
       <w>180</w>
       <h>220</h>
     </coordinates>
@@ -49,8 +49,8 @@ prearm switch is on</panel_attributes>
   <element>
     <id>Relation</id>
     <coordinates>
-      <x>730</x>
-      <y>210</y>
+      <x>870</x>
+      <y>260</y>
       <w>180</w>
       <h>210</h>
     </coordinates>
@@ -61,8 +61,8 @@ prearm switch is off</panel_attributes>
   <element>
     <id>Relation</id>
     <coordinates>
-      <x>780</x>
-      <y>430</y>
+      <x>920</x>
+      <y>480</y>
       <w>330</w>
       <h>40</h>
     </coordinates>
@@ -73,8 +73,8 @@ arm sequence is on</panel_attributes>
   <element>
     <id>Relation</id>
     <coordinates>
-      <x>780</x>
-      <y>390</y>
+      <x>920</x>
+      <y>440</y>
       <w>330</w>
       <h>40</h>
     </coordinates>
@@ -85,13 +85,70 @@ arm sequence is off</panel_attributes>
   <element>
     <id>Relation</id>
     <coordinates>
-      <x>930</x>
-      <y>250</y>
+      <x>1070</x>
+      <y>300</y>
       <w>210</w>
       <h>170</h>
     </coordinates>
     <panel_attributes>lt=-&gt;
 prearm switch is off</panel_attributes>
     <additional_attributes>190.0;150.0;190.0;60.0;10.0;60.0;10.0;10.0</additional_attributes>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>310</x>
+      <y>220</y>
+      <w>440</w>
+      <h>90</h>
+    </coordinates>
+    <panel_attributes>
+*prearm switch*
+--
+on = ch5 signal is above the center for &gt;200mS
+off = ch5 signal is below the center for &gt;200mS</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>310</x>
+      <y>330</y>
+      <w>440</w>
+      <h>90</h>
+    </coordinates>
+    <panel_attributes>
+*arm switch sequence*
+--
+on = throttle signal is minimum and yaw signal is maximum for &gt;3Sec
+off = yaw signal is minimum for &gt;3Sec</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>310</x>
+      <y>440</y>
+      <w>440</w>
+      <h>90</h>
+    </coordinates>
+    <panel_attributes>
+*weapon's speed cut*
+--
+if throttle signal is below the limit, stop the motors
+
+</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLFrame</id>
+    <coordinates>
+      <x>780</x>
+      <y>220</y>
+      <w>590</w>
+      <h>310</h>
+    </coordinates>
+    <panel_attributes>*Weapon's Cycle*</panel_attributes>
+    <additional_attributes/>
   </element>
 </diagram>

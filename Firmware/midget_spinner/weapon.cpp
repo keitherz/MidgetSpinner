@@ -26,22 +26,24 @@ static unsigned long      ui32_arm_activation_validation;
 static unsigned long      ui32_arm_deactivation_validation;
 
 static void stopWeapon(void);
-static void setWeaponSpeed(char si8_speed);
+static void setWeaponSpeed(int si16_speed);
 static void updatePreArmSwitchStatus(void);
 static void updateArmSwitchStatus(void);
 
 void initWeapon(void)
 {
   /* disable weapon motors */
-  e_weapon_state = DISARMED;
+  e_weapon_state            = DISARMED;
+  b_prearm_switch_active    = false;
+  b_arm_switch_active       = false;
   stopWeapon();
 }
 
 void weaponCycle(unsigned int ui16_weapon_speed, unsigned int ui16_weapon_arm, unsigned int ui16_weapon_prearm)
 {
-  si16_weapon_speed_buff   = map(ui16_weapon_speed, K_MIN_PULSE_WIDTH, K_MAX_PULSE_WIDTH, K_MIN_MOTOR_SPEED, K_MAX_MOTOR_SPEED);
-  ui16_weapon_arm_buff     = ui16_weapon_arm;
-  ui16_weapon_prearm_buff  = ui16_weapon_prearm;
+  si16_weapon_speed_buff    = map(ui16_weapon_speed, K_MIN_PULSE_WIDTH, K_MAX_PULSE_WIDTH, 0, K_MAX_MOTOR_SPEED);
+  ui16_weapon_arm_buff      = ui16_weapon_arm;
+  ui16_weapon_prearm_buff   = ui16_weapon_prearm;
 
   updateArmSwitchStatus();
   
@@ -102,6 +104,16 @@ void weaponCycle(unsigned int ui16_weapon_speed, unsigned int ui16_weapon_arm, u
       {
         /* armed state */
         updateArmSwitchStatus();
+
+        /* do not turn on weapon if below specified limit */
+        if(si16_weapon_speed_buff < K_SPEED_CUT_LIMIT)
+        {
+          stopWeapon();
+        }
+        else
+        {
+          setWeaponSpeed(si16_weapon_speed_buff);
+        }
       }      
       break;
     }
@@ -118,7 +130,7 @@ static void stopWeapon(void)
   
 }
 
-static void setWeaponSpeed(char si8_speed)
+static void setWeaponSpeed(int si16_speed)
 {
   
 }
@@ -155,7 +167,7 @@ static void updatePreArmSwitchStatus(void)
 
 static void updateArmSwitchStatus(void)
 {
-  if(ui16_weapon_arm_buff > UI16_ARM_ACTIVATE_LIMIT)
+  if((ui16_weapon_arm_buff > UI16_ARM_ACTIVATE_LIMIT) && (si16_weapon_speed_buff < K_SPEED_CUT_LIMIT))
   {
     ui32_arm_deactivation_validation = K_ARM_VALIDATION_DELAY;
 

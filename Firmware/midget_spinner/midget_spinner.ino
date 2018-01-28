@@ -38,8 +38,8 @@ void loop()
     if(ui32_elapsed_protocol_idle > UI16_NO_SIGNAL_TIMEOUT)
     {
       Serial.println("No received data");
-      initWeapon();
-      initMobot();
+      initWeapon();                                                           // stop weapon's motors
+      initMobot();                                                            // stop mobot's motors
     }
     /* active mode */
     else

@@ -1,6 +1,8 @@
 #ifndef WEAPON_CFG
 #define WEAPON_CFG
 
+#define K_SPEED_CUT_LIMIT               10
+
 #define K_PREARM_LIMIT                  1500
 #define K_PREARM_VALIDATION_DELAY       50        // 50mS
 

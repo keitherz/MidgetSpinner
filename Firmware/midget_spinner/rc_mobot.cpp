@@ -12,8 +12,8 @@ static  int       si16_left_motor_speed;
 static  int       si16_right_motor_speed;
 
 static void stopMotors(void);
-static void setLeftMotorSpeed(char si8_speed);
-static void setRightMotorSpeed(char si8_speed);
+static void setLeftMotorSpeed(int si16_speed);
+static void setRightMotorSpeed(int si16_speed);
 
 void initMobot(void)
 {
@@ -40,12 +40,12 @@ static void stopMotors(void)
   
 }
 
-static void setLeftMotorSpeed(char si8_speed)
+static void setLeftMotorSpeed(int si16_speed)
 {
   
 }
 
-static void setRightMotorSpeed(char si8_speed)
+static void setRightMotorSpeed(int si16_speed)
 {
   
 }

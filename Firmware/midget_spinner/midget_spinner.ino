@@ -19,8 +19,8 @@ static unsigned int  ui16_rx_pulses[NUM_OF_RX_CHANNELS];
 
 void setup() 
 {
-  initRadioDecoder();
   Serial.begin(9600);
+  initRadioDecoder();
   initWeapon();
   initMobot();
   ui32_cycle_stamp = millis();

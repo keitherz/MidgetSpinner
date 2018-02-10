@@ -11,6 +11,7 @@ static const unsigned char UI8_LEFT_MOTOR_REVERSE_PIN     = (unsigned char)K_LEF
 static const unsigned char UI8_RIGHT_MOTOR_FORWARD_PIN    = (unsigned char)K_RIGHT_MOTOR_FORWARD_PIN;
 static const unsigned char UI8_RIGHT_MOTOR_REVERSE_PIN    = (unsigned char)K_RIGHT_MOTOR_REVERSE_PIN;
 
+static const unsigned char UI8_MOTORS_POWER_PIN           = (unsigned char)K_MOTORS_POWER_PIN;
 static const unsigned char UI8_MOTORS_ENABLE_PIN          = (unsigned char)K_MOTORS_ENABLE_PIN;
 
 static  int       si16_forward_speed_buff;
@@ -25,6 +26,7 @@ static void setRightMotorSpeed(int si16_speed);
 void initMobot(void)
 {
   /* default enable pin state */
+  digitalWrite(UI8_MOTORS_POWER_PIN, LOW);
   digitalWrite(UI8_MOTORS_ENABLE_PIN, HIGH);  // active low
   
   /* pin mode initialization */
@@ -32,6 +34,7 @@ void initMobot(void)
   pinMode(UI8_LEFT_MOTOR_REVERSE_PIN, OUTPUT);
   pinMode(UI8_RIGHT_MOTOR_FORWARD_PIN, OUTPUT);
   pinMode(UI8_RIGHT_MOTOR_REVERSE_PIN, OUTPUT);
+  pinMode(UI8_MOTORS_POWER_PIN, OUTPUT);
   pinMode(UI8_MOTORS_ENABLE_PIN, OUTPUT);
   
   /* disable mobot motors */
@@ -74,6 +77,7 @@ static void setLeftMotorSpeed(int si16_speed)
     analogWrite(UI8_LEFT_MOTOR_REVERSE_PIN, -si16_speed);
   }
   
+  digitalWrite(UI8_MOTORS_POWER_PIN, HIGH);
   digitalWrite(UI8_MOTORS_ENABLE_PIN, LOW);
 }
 
@@ -90,5 +94,6 @@ static void setRightMotorSpeed(int si16_speed)
     analogWrite(UI8_RIGHT_MOTOR_REVERSE_PIN, -si16_speed);
   }
   
+  digitalWrite(UI8_MOTORS_POWER_PIN, HIGH);
   digitalWrite(UI8_MOTORS_ENABLE_PIN, LOW);
 }

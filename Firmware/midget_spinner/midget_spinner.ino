@@ -44,6 +44,8 @@ void loop()
     /* active mode */
     else
     {
+
+#if 0
       Serial.print("Channel 1:");
       Serial.println(ui16_rx_pulses[RX_CHANNEL1]);
       
@@ -60,8 +62,9 @@ void loop()
       Serial.println(ui16_rx_pulses[RX_CHANNEL5]);
       
       Serial.print("Channel 6:");
-      Serial.println(ui16_rx_pulses[RX_CHANNEL6]);  
-  
+      Serial.println(ui16_rx_pulses[RX_CHANNEL6]);
+#endif
+
       weaponCycle(ui16_rx_pulses[RX_CHANNEL3], ui16_rx_pulses[RX_CHANNEL4], ui16_rx_pulses[RX_CHANNEL4]);
       mobotCycle(ui16_rx_pulses[RX_CHANNEL2], ui16_rx_pulses[RX_CHANNEL1]);
     }    
